@@ -58,7 +58,8 @@ class WebDriver(object):
 
     def __init__(self, command_executor='http://127.0.0.1:4444/wd/hub',
                  desired_capabilities=None, browser_profile=None, proxy=None,
-                 keep_alive=False, file_detector=None):
+                 keep_alive=False, file_detector=None,
+                 session_id=None):
         """
         Create a new driver that will issue commands using the wire protocol.
 
@@ -75,6 +76,7 @@ class WebDriver(object):
              HTTP keep-alive. Defaults to False.
          - file_detector - Pass custom file detector object during instantiation. If None,
              then default LocalFileDetector() will be used.
+         - session_id - Session ID from an earlier webdriver session. Will try to re-use the session.
         """
         if desired_capabilities is None:
             raise WebDriverException("Desired Capabilities can't be None")
@@ -89,8 +91,13 @@ class WebDriver(object):
         self.session_id = None
         self.capabilities = {}
         self.error_handler = ErrorHandler()
-        self.start_client()
-        self.start_session(desired_capabilities, browser_profile)
+        if session_id:
+            self.session_id = session_id
+            self.capabilities = desired_capabilities
+            self.w3c = "specificationLevel" in self.capabilities
+        else:
+            self.start_client()
+            self.start_session(desired_capabilities, browser_profile)
         self._switch_to = SwitchTo(self)
         self._mobile = Mobile(self)
         self.file_detector = file_detector or LocalFileDetector()
